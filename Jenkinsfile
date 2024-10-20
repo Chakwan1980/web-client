@@ -2,7 +2,7 @@ pipeline {
     agent {
         kubernetes {
             label 'jenkins-agent'
-            yamlFile 'kubernetes/jenkins-pod-template.yaml'
+            yamlFile 'kubernetes/jenkins-pod-template.yaml' // Asegúrate de que esta ruta sea correcta
         }
     }
 
@@ -51,7 +51,7 @@ pipeline {
         }
         stage('Kubernetes Deploy Frontend Dependencies') {
             steps {
-                echo 'Deploying API dependencies to kubernetes cluster...'
+                echo 'Deploying API dependencies to Kubernetes cluster...'
                 container('kubectl') {
                     sh 'kubectl apply -f kubernetes/web-nginx-configmap.yaml'
                 } 

@@ -24,7 +24,7 @@ spec:
           mountPath: /var/run/docker.sock
 
     - name: kubectl
-      image: rosaflores/kubectl:project1 
+      image: bitnami/kubectl:latest  # Cambiar a la imagen de Bitnami
       resources:
         requests:
           memory: "128Mi"
