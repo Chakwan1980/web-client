@@ -21,7 +21,7 @@ pipeline {
     stages {        
         stage('Checkout') {           
             steps {
-                echo 'echo "El repositorio es: ${GITHUB_REPO}"
+                echo 'echo "El repositorio es: ${GITHUB_REPO} probar el error"
 '
                 git url: "${GITHUB_REPO}", branch: 'master'
             }            
