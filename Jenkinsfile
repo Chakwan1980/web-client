@@ -9,26 +9,36 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout') {           
             steps {
-                // Clona tu repositorio
-                git 'https://github.com/Chakwan1980/web-client.git'
-            }
+                echo 'Checking out code...'
+                git url: "${GITHUB_REPO}", branch: 'master'
+            }            
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {   
             steps {
-                script {
-                    // Construye la imagen Docker
-                    docker.build("${DOCKER_IMAGE}", '.')
+                echo 'Building the Docker image...'
+                container('docker') {
+                    sh 'docker build -t $DOCKER_IMAGE .'
                 }
+                echo 'Docker build successful.'
+            }    
+        }
+            stage('Kubernetes Deploy Frontend Dependencies') {
+            steps {
+                echo 'Deploying API dependencies to kubernetes cluster...'
+                container('kubectl') {
+                    sh 'kubectl apply -f kubernetes/web-nginx-configmap.yaml'
+                } 
+                echo 'Deployment successful.'
             }
         }
 
         stage('Run Tests') {
             steps {
                 script {
-                    // Ejecuta pruebas de tu aplicación
+                    // Instala las dependencias y ejecuta las pruebas
                     sh 'npm install'
                     sh 'npm test'
                 }
@@ -38,12 +48,11 @@ pipeline {
         stage('Docker Push') {
             steps {
                 echo 'Pushing the Docker image to Docker Hub...'
-                container('docker') {
-                    script {
-                        docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                            sh "docker push ${DOCKER_IMAGE}"
-                        }
-                    }  
+                script {
+                    docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
+                        // Sube la imagen a Docker Hub
+                        sh "docker push ${DOCKER_IMAGE}"
+                    }
                 }
                 echo 'Docker image pushed successfully.'
             }
@@ -53,9 +62,7 @@ pipeline {
             steps {
                 script {
                     // Despliega la imagen en Kubernetes
-                    sh '''
-                        kubectl set image deployment/webpsychology-frontend webpsychology-frontend=${DOCKER_IMAGE} --record
-                    '''
+                    sh "kubectl set image deployment/webpsychology-frontend webpsychology-frontend=${DOCKER_IMAGE} --record"
                 }
             }
         }
