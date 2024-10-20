@@ -18,11 +18,10 @@ pipeline {
         DOCKER_IMAGE = "${DOCKER_REPO}:${IMAGE_TAG}"
     }
     
-    stages {        
+    stages {
         stage('Checkout') {           
             steps {
-                echo 'echo "El repositorio es: ${GITHUB_REPO} probar el error"
-'
+                echo "El repositorio es: ${GITHUB_REPO} probar el error"
                 git url: "${GITHUB_REPO}", branch: 'master'
             }            
         }
@@ -30,7 +29,9 @@ pipeline {
             steps {
                 echo 'Building the Docker image...'
                 container('docker') {
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    script {
+                        sh "docker build -t ${DOCKER_IMAGE} ."
+                    }
                 }
                 echo 'Docker build successful.'
             }    
