@@ -49,6 +49,15 @@ pipeline {
                 echo 'Docker image pushed successfully.'
             }
         }
+        stage('Kubernetes Access Test') {  // Nuevo stage para verificar el acceso a Kubernetes
+            steps {
+                echo 'Testing access to Kubernetes cluster...'
+                container('kubectl') {
+                    sh 'kubectl get pods --all-namespaces' // Intenta obtener los pods en todos los namespaces
+                } 
+                echo 'Access to Kubernetes cluster successful.'
+            }
+        }
         stage('Kubernetes Deploy Frontend Dependencies') {
             steps {
                 echo 'Deploying API dependencies to Kubernetes cluster...'
