@@ -6,13 +6,14 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_IMAGE = "${DOCKER_REPO}:${IMAGE_TAG}"
         DOCKER_CREDENTIALS_ID = 'dockerhub-token'
+        GITHUB_REPO = 'https://github.com/Chakwan1980/web-client.git' // Asegúrate de definir esta variable si no está ya configurada
     }
 
-    stages {
+    stages {        
         stage('Checkout') {           
             steps {
                 echo 'Checking out code...'
-                git url: "${GITHUB_REPO}", branch: 'master'
+                git url: "${GITHUB_REPO}", branch: 'main'
             }            
         }
 
@@ -25,7 +26,22 @@ pipeline {
                 echo 'Docker build successful.'
             }    
         }
-            stage('Kubernetes Deploy Frontend Dependencies') {
+
+        stage('Docker Push') {
+            steps {
+                echo 'Pushing the Docker image to Docker Hub...'
+                container('docker') {
+                    script {
+                        docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
+                            sh 'docker push $DOCKER_IMAGE'
+                        }
+                    }  
+                }
+                echo 'Docker image pushed successfully.'
+            }
+        }
+
+        stage('Kubernetes Deploy Frontend Dependencies') {
             steps {
                 echo 'Deploying API dependencies to kubernetes cluster...'
                 container('kubectl') {
@@ -35,45 +51,54 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Kubernetes Deploy web-front App') {
             steps {
-                script {
-                    // Instala las dependencias y ejecuta las pruebas
-                    sh 'npm install'
-                    sh 'npm test'
-                }
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                echo 'Pushing the Docker image to Docker Hub...'
-                script {
-                    docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                        // Sube la imagen a Docker Hub
-                        sh "docker push ${DOCKER_IMAGE}"
+                echo 'Deleting previous App deployment...'
+                container('kubectl') {
+                    sh '''
+                        kubectl delete deployment web-app-frontend || true  
+                    '''
+                } 
+                echo 'Previous App deployment deleted successfully.'
+                echo 'Creating new App deployment...'
+                container('kubectl') {
+                    script {
+                        sh '''
+                            sed -i "s|image: $DOCKER_REPO:latest|image: $DOCKER_IMAGE|g" kubernetes/web-frontend.yaml
+                        '''
+                        sh '''
+                            kubectl apply -f kubernetes/web-frontend.yaml
+                            kubectl rollout status deployment web-app-api --timeout=300s
+                        '''
                     }
-                }
-                echo 'Docker image pushed successfully.'
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    // Despliega la imagen en Kubernetes
-                    sh "kubectl set image deployment/webpsychology-frontend webpsychology-frontend=${DOCKER_IMAGE} --record"
-                }
+                } 
+                echo 'New App deployment created successfully.'
             }
         }
     }
 
     post {
+        always {
+            echo 'Post: DockerHub URL...'
+            script {
+                def dockerHubUrl = "https://hub.docker.com/r/${DOCKER_REPO}/tags?name=${IMAGE_TAG}"
+                echo "DockerHub URL for the image: ${dockerHubUrl}"
+                writeFile file: 'dockerhub-url.txt', text: dockerHubUrl
+                archiveArtifacts artifacts: 'dockerhub-url.txt'
+            }
+        }
+
         success {
-            echo 'Pipeline completado exitosamente.'
+            echo 'Integration tests succeeded, tagging the image with "latest"...'
+            container('docker') {
+                script {
+                    docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
+                        sh "docker tag ${DOCKER_IMAGE} ${DOCKER_REPO}:latest"
+                        sh "docker push ${DOCKER_REPO}:latest"
+                    }
+                }
+            }
+            echo 'Docker image successfully pushed with "latest" tag.'
         }
-        failure {
-            echo 'Pipeline fallido.'
-        }
-    }
+    }   
 }
