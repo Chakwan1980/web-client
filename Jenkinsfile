@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo 'Building the Docker image...'
                 container('docker') {
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
                 echo 'Docker build successful.'
             }    
@@ -40,7 +40,7 @@ pipeline {
                 container('docker') {
                     script {
                         docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                            sh 'docker push $DOCKER_IMAGE'
+                            sh "docker push ${DOCKER_IMAGE}"
                         }
                     }  
                 }
@@ -60,20 +60,16 @@ pipeline {
             steps {
                 echo 'Deleting previous App deployment...'
                 container('kubectl') {
-                    sh '''
-                        kubectl delete deployment feedback-app-frontend || true  
-                    '''
+                    sh 'kubectl delete deployment feedback-app-frontend || true'
                 } 
                 echo 'Previous App deployment deleted successfully.'
                 echo 'Creating new App deployment...'
                 container('kubectl') {
                     script {
-                        sh '''
-                            sed -i "s|image: $DOCKER_REPO:latest|image: $DOCKER_IMAGE|g" kubernetes/web-frontend.yaml
-                        '''
+                        sh "sed -i 's|image: ${DOCKER_REPO}:latest|image: ${DOCKER_IMAGE}|g' kubernetes/web-frontend.yaml"
                         sh '''
                             kubectl apply -f kubernetes/web-frontend.yaml
-                            kubectl rollout status deployment web-app-api --timeout=300s
+                            kubectl rollout status deployment feedback-app-frontend --timeout=300s
                         '''
                     }
                 } 
