@@ -21,7 +21,8 @@ pipeline {
     stages {        
         stage('Checkout') {           
             steps {
-                echo 'Checking out code...'
+                echo 'echo "El repositorio es: ${GITHUB_REPO}"
+'
                 git url: "${GITHUB_REPO}", branch: 'master'
             }            
         }
