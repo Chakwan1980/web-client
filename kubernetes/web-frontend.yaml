@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webpsychology-frontend-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: webpsychology-frontend
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webpsychology-frontend
+  labels:
+    app: webpsychology-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webpsychology-frontend
+  template:
+    metadata:
+      labels:
+        app: webpsychology-frontend
+    spec:
+      containers:
+        - name: webpsychology-frontend
+          image: rosaflores/webpsychology-frontend-app:latest  # Cambiado a la imagen correcta
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "125m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webpsychology-backend
+  labels:
+    app: webpsychology-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webpsychology-backend
+  template:
+    metadata:
+      labels:
+        app: webpsychology-backend
+    spec:
+      containers:
+        - name: webpsychology-backend
+          image: rosaflores/webpsychology-backend-app:latest
+          env:
+            - name: DB_USER
+              value: postgres
+            - name: DB_HOST
+              value: webpsychology-postgres-db
+            - name: DB_NAME
+              value: webpsychology_db
+            - name: DB_PASSWORD
+              value: password
+            - name: DB_PORT
+              value: "5432"
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /health  # Asegúrate de que tengas un endpoint de salud
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webpsychology-backend-service
+spec:
+  ports:
+    - port: 3030
+      targetPort: 3000
+  selector:
+    app: webpsychology-backend
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webpsychology-postgres
+  labels:
+    app: webpsychology-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webpsychology-postgres
+  template:
+    metadata:
+      labels:
+        app: webpsychology-postgres
+    spec:
+      containers:
+        - name: webpsychology-postgres
+          image: postgres:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              value: password
+            - name: POSTGRES_DB
+              value: webpsychology_db
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: dproject1-docker-socket  # Cambiado al nuevo nombre de volumen
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: dproject1-docker-socket  # Cambiado al nuevo nombre de volumen
+          hostPath:
+            path: /var/run/docker.sock  # Este debe ser accesible en el nodo
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: feedback-app-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Ajusta según tus necesidades
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: feedback-frontend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: webpsychology-frontend
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
