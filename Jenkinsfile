@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-
         GITHUB_REPO = 'https://github.com/Chakwan1980/web-client.git'
         DOCKER_CREDENTIALS_ID = 'dockerhub-token'
         DOCKER_REPO = 'rosaflores/webpsychology-frontend-app'
@@ -14,14 +13,16 @@ pipeline {
         stage('Checkout') {           
             steps {
                 echo 'Checking out code...'
-                git url: "${GITHUB_REPO}", branch: 'main'
+                git url: "${GITHUB_REPO}", branch: 'master'
             }            
         }
         stage('Docker Build') {   
             steps {
                 echo 'Building the Docker image...'
                 container('docker') {
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    script {
+                        sh "docker build -t ${DOCKER_IMAGE} ."
+                    }
                 }
                 echo 'Docker build successful.'
             }    
@@ -32,7 +33,7 @@ pipeline {
                 container('docker') {
                     script {
                         docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                            sh 'docker push $DOCKER_IMAGE'
+                            sh "docker push ${DOCKER_IMAGE}"
                         }
                     }  
                 }
@@ -41,7 +42,7 @@ pipeline {
         }
         stage('Kubernetes Deploy Frontend Dependencies') {
             steps {
-                echo 'Deploying API dependencies to kubernetes cluster...'
+                echo 'Deploying API dependencies to Kubernetes cluster...'
                 container('kubectl') {
                     sh 'kubectl apply -f kubernetes/web-nginx-configmap.yaml'
                 } 
@@ -52,21 +53,15 @@ pipeline {
             steps {
                 echo 'Deleting previous App deployment...'
                 container('kubectl') {
-                    sh '''
-                        kubectl delete deployment web-app-frontend || true  
-                    '''
+                    sh 'kubectl delete deployment web-app-frontend || true'  
                 } 
                 echo 'Previous App deployment deleted successfully.'
                 echo 'Creating new App deployment...'
                 container('kubectl') {
                     script {
-                        sh '''
-                            sed -i "s|image: $DOCKER_REPO:latest|image: $DOCKER_IMAGE|g" kubernetes/web-frontend.yaml
-                        '''
-                        sh '''
-                            kubectl apply -f kubernetes/web-frontend.yaml
-                            kubectl rollout status deployment web-app-api --timeout=300s
-                        '''
+                        sh "sed -i 's|image: ${DOCKER_REPO}:latest|image: ${DOCKER_IMAGE}|g' kubernetes/web-frontend.yaml"
+                        sh 'kubectl apply -f kubernetes/web-frontend.yaml'
+                        sh 'kubectl rollout status deployment web-app-api --timeout=300s'
                     }
                 } 
                 echo 'New App deployment created successfully.'
