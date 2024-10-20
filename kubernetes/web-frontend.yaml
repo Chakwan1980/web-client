@@ -29,14 +29,7 @@ spec:
     spec:
       containers:
         - name: webpsychology-frontend
-          image: rosaflores/webpsychology-frontend-app:latest  # Cambiado a la imagen correcta
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "125m"
-            limits:
-              memory: "128Mi"
-              cpu: "250m"
+          image: rosaflores/webpsychology-frontend-app:latest
           ports:
             - containerPort: 80
 
@@ -64,7 +57,7 @@ spec:
             - name: DB_USER
               value: postgres
             - name: DB_HOST
-              value: webpsychology-postgres-db
+              value: webpsychology-postgres
             - name: DB_NAME
               value: webpsychology_db
             - name: DB_PASSWORD
@@ -73,12 +66,6 @@ spec:
               value: "5432"
           ports:
             - containerPort: 3000
-          readinessProbe:
-            httpGet:
-              path: /health  # Asegúrate de que tengas un endpoint de salud
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 10
 
 ---
 apiVersion: v1
@@ -120,41 +107,21 @@ spec:
           ports:
             - containerPort: 5432
           volumeMounts:
-            - name: dproject1-docker-socket  # Cambiado al nuevo nombre de volumen
+            - name: postgres-data
               mountPath: /var/lib/postgresql/data
       volumes:
-        - name: dproject1-docker-socket  # Cambiado al nuevo nombre de volumen
-          hostPath:
-            path: /var/run/docker.sock  # Este debe ser accesible en el nodo
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: webpsychology-data-pvc
 
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: feedback-app-data-pvc
+  name: webpsychology-data-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  # Ajusta según tus necesidades
-
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: feedback-frontend-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: webpsychology-frontend
-  minReplicas: 1
-  maxReplicas: 4
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 50
+      storage: 1Gi
