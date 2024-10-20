@@ -9,87 +9,47 @@ pipeline {
         DOCKER_IMAGE = "${DOCKER_REPO}:${IMAGE_TAG}"
     }
 
-    stages {        
-        stage('Checkout') {           
+    stages {
+        stage('Checkout') {
             steps {
-                echo 'Checking out code...'
-                git url: "${GITHUB_REPO}", branch: 'master'
-            }            
-        }
-        stage('Docker Build') {   
-            steps {
-                echo 'Building the Docker image...'
-                container('docker') {
-                    script {
-                        sh "docker build -t ${DOCKER_IMAGE} ."
-                    }
-                }
-                echo 'Docker build successful.'
-            }    
-        }
-        stage('Docker Push') {
-            steps {
-                echo 'Pushing the Docker image to Docker Hub...'
-                container('docker') {
-                    script {
-                        docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                            sh "docker push ${DOCKER_IMAGE}"
-                        }
-                    }  
-                }
-                echo 'Docker image pushed successfully.'
-            }
-        }
-        stage('Kubernetes Deploy Frontend Dependencies') {
-            steps {
-                echo 'Deploying API dependencies to Kubernetes cluster...'
-                container('kubectl') {
-                    sh 'kubectl apply -f kubernetes/web-nginx-configmap.yaml'
-                } 
-                echo 'Deployment successful.'
-            }
-        }
-        stage('Kubernetes Deploy web-front App') {
-            steps {
-                echo 'Deleting previous App deployment...'
-                container('kubectl') {
-                    sh 'kubectl delete deployment web-app-frontend || true'  
-                } 
-                echo 'Previous App deployment deleted successfully.'
-                echo 'Creating new App deployment...'
-                container('kubectl') {
-                    script {
-                        sh "sed -i 's|image: ${DOCKER_REPO}:latest|image: ${DOCKER_IMAGE}|g' kubernetes/web-frontend.yaml"
-                        sh 'kubectl apply -f kubernetes/web-frontend.yaml'
-                        sh 'kubectl rollout status deployment web-app-api --timeout=300s'
-                    }
-                } 
-                echo 'New App deployment created successfully.'
-            }
-        }
-    }
-    post {
-        always {
-            echo 'Post: DockerHub URL...'
-            script {
-                def dockerHubUrl = "https://hub.docker.com/r/${DOCKER_REPO}/tags?name=${IMAGE_TAG}"
-                echo "DockerHub URL for the image: ${dockerHubUrl}"
-                writeFile file: 'dockerhub-url.txt', text: dockerHubUrl
-                archiveArtifacts artifacts: 'dockerhub-url.txt'
+                echo 'Cloning the repository...'
+                git url: "${GITHUB_REPO}", branch: 'main'
             }
         }
 
-        success {
-            echo 'Integration tests succeeded, tagging the image with "latest"...'
-            container('docker') {
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building the Docker image...'
+                script {
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo 'Pushing the Docker image to Docker Hub...'
                 script {
                     docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                        sh "docker tag ${DOCKER_IMAGE} ${DOCKER_REPO}:latest"
-                        sh "docker push ${DOCKER_REPO}:latest"
+                        sh "docker push ${DOCKER_IMAGE}"
                     }
                 }
             }
-            echo 'Docker image successfully pushed with "latest" tag.'
         }
-    }   
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+
+        success {
+            echo 'Docker image pushed successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
 }
+
