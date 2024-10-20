@@ -2,11 +2,12 @@ pipeline {
     agent any
 
     environment {
+
+        GITHUB_REPO = 'https://github.com/Chakwan1980/web-client.git'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-token'
         DOCKER_REPO = 'rosaflores/webpsychology-frontend-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_IMAGE = "${DOCKER_REPO}:${IMAGE_TAG}"
-        DOCKER_CREDENTIALS_ID = 'dockerhub-token'
-        GITHUB_REPO = 'https://github.com/Chakwan1980/web-client.git' // Asegúrate de definir esta variable si no está ya configurada
     }
 
     stages {        
@@ -16,7 +17,6 @@ pipeline {
                 git url: "${GITHUB_REPO}", branch: 'main'
             }            
         }
-
         stage('Docker Build') {   
             steps {
                 echo 'Building the Docker image...'
@@ -26,7 +26,6 @@ pipeline {
                 echo 'Docker build successful.'
             }    
         }
-
         stage('Docker Push') {
             steps {
                 echo 'Pushing the Docker image to Docker Hub...'
@@ -40,7 +39,6 @@ pipeline {
                 echo 'Docker image pushed successfully.'
             }
         }
-
         stage('Kubernetes Deploy Frontend Dependencies') {
             steps {
                 echo 'Deploying API dependencies to kubernetes cluster...'
@@ -50,7 +48,6 @@ pipeline {
                 echo 'Deployment successful.'
             }
         }
-
         stage('Kubernetes Deploy web-front App') {
             steps {
                 echo 'Deleting previous App deployment...'
@@ -76,7 +73,6 @@ pipeline {
             }
         }
     }
-
     post {
         always {
             echo 'Post: DockerHub URL...'
