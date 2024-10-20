@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_REPO = 'rosaflores/webpsychology-frontend-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
-        DOCKER_IMAGE = "${DOCKER_REPO}:${IMAGE_TAG}"  // Solo se define aquí
+        DOCKER_IMAGE = "${DOCKER_REPO}:${IMAGE_TAG}"
         DOCKER_CREDENTIALS_ID = 'dockerhub-token'
     }
 
@@ -41,7 +41,7 @@ pipeline {
                 container('docker') {
                     script {
                         docker.withRegistry('', "${DOCKER_CREDENTIALS_ID}") {
-                            sh "docker push ${DOCKER_IMAGE}"  // Asegúrate de usar comillas dobles
+                            sh "docker push ${DOCKER_IMAGE}"
                         }
                     }  
                 }
@@ -54,7 +54,7 @@ pipeline {
                 script {
                     // Despliega la imagen en Kubernetes
                     sh '''
-                        kubectl set image deployment/feedback-app-frontend feedback-app-frontend=${DOCKER_IMAGE} --record
+                        kubectl set image deployment/webpsychology-frontend webpsychology-frontend=${DOCKER_IMAGE} --record
                     '''
                 }
             }
