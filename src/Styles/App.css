@@ -1,0 +1,98 @@
+.App {
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.contact-form {
+  margin: 20px auto;
+  max-width: 500px;
+}
+
+.contact-form form {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-form label {
+  margin-bottom: 10px;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+}
+
+.contact-form button {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* App.css */
+
+/* Estilos básicos para el body */
+/* App.css */
+
+/* App.css */
+
+/* Estilos básicos para el body */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #ECEAE4;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Altura completa de la ventana */
+}
+
+.Navbar {
+  z-index: 10; /* Asegúrate de que el Navbar esté por encima de otros elementos */
+  position: relative; /* Asegura que el z-index funcione */
+}
+
+.main-layout {
+  display: flex;
+  flex: 1; /* Ocupa todo el espacio disponible después del Navbar */
+  position: relative;
+}
+
+.sidebar {
+  position: fixed; /* Fijo en el lado izquierdo */
+  top: 0;
+  left: 0;
+  width: 200px; /* Ancho del sidebar */
+  height: calc(100% - 60px); /* Altura completa menos la altura del Navbar */
+  background-color: #9AD2D2;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  border-radius: 10px;
+  z-index: 1; /* Asegúrate de que el Sider esté por debajo del Navbar */
+}
+
+.content {
+  margin-left: 220px; /* Deja espacio para el sidebar */
+  padding: 20px;
+  overflow-y: auto; /* Habilita el scroll solo para el contenido principal */
+  height: calc(100% - 60px); /* Altura completa menos la altura del Navbar */
+  box-sizing: border-box;
+}
+
+.container{ 
+display: flex;
+justify-content: space-between;
+width: 100%;
+
+}

@@ -1,0 +1,56 @@
+/* Estilos básicos para que el body ocupe toda la pantalla */
+html, body {
+    height: 100%;
+    margin: 1;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    display: flex;
+    height: 100vh; /* El contenedor ocupa toda la altura de la ventana */
+  }
+  
+  .sidebar {
+    position: fixed; /* El contenedor queda fijo en el lado izquierdo */
+    top: 30px;
+    left: 0;
+    width: 200px; /* Ancho del contenedor */
+    height: 100%; /* Altura completa */
+    background-color: #9AD2D2;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* Asegura que los botones ocupen todo el ancho disponible */
+    justify-content: center;
+    border-radius: 10px;
+  }
+  
+  .sidebar-btn {
+    background-color: #D8A7D9;
+    color: #750478;
+    border: none;
+    padding: 15px 0; /* Ajusta el padding según sea necesario */
+    margin: 10px 0;
+    cursor: pointer;
+    width: 100%; /* Asegura que el botón ocupe todo el ancho del contenedor */
+    text-align: center;
+    border-radius: 10px;
+    outline: none;
+  }
+  
+  .sidebar-btn:hover {
+    background-color: #C084C3; /* Ajusta el color del hover según sea necesario */
+  }
+  
+  .content {
+    margin-left: 220px; /* Deja espacio para el sidebar */
+    padding: 20px;
+    overflow-y: auto; /* Habilita el scroll solo para el contenido principal */
+    height: 100vh;
+    box-sizing: border-box;
+  }
+  
+  h1 {
+    margin-top: 0;
+  }
+  

@@ -1,0 +1,16 @@
+# Excluir node_modules
+node_modules
+
+# Excluir archivos de log
+*.log
+
+# Excluir archivos de configuración local
+.env
+
+# Excluir carpetas de pruebas
+tests
+coverage
+
+# Excluir archivos de sistema
+.DS_Store
+Thumbs.db

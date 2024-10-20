@@ -1,0 +1,52 @@
+.navbar {
+    background-color: #9AD2D2;
+    padding: 1rem;
+    width: 100%;
+  }
+  
+  .navbar-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .nav-btn {
+    background-color: #D8A7D9;
+    color: #750478;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border-radius: 10px;
+    outline: none; /* Quita el borde de enfoque por defecto */
+  }
+  
+  .nav-btn:hover {
+    background-color: #C084C3;
+  }
+  
+  /* Asegúrate de que no haya estilos globales conflictivos */
+  button:focus {
+    outline: none; /* Asegura que no haya outline en el enfoque de los botones */
+  }
+  
+  /* Estilo del contenedor del logo y título */
+  .nav-2 {
+    text-align: center; /* Centra el contenido */
+    margin-bottom: 20px; /* Espaciado inferior */
+  }
+  
+  /* Estilo del logo */
+  .nav-2 .logo {
+    width: 150px; /* Ancho del logo */
+    height: auto; /* Altura automática para mantener proporciones */
+  }
+  
+  /* Estilo del título en el NavBar */
+  .nav-2 h1 {
+    font-size: 24px; /* Tamaño de fuente */
+    color: #750478; /* Color del texto */
+    margin: 10px 0; /* Espaciado superior e inferior */
+  }
+  
